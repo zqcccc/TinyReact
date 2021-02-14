@@ -2,6 +2,15 @@
 
 This repository was created for me to learn react, it's a rough mockup of how react works, but it helps me understand the virtual DOM and how react works very well
 
+just clone this repository and
+
+```shell
+npm install
+npm run start
+```
+
+`src/index.js` is the entry. It is easy to understand, hope it helps you
+
 ## Virtual DOM 及 Diff 算法
 
 ### 1. JSX 到底是什么

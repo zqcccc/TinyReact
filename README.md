@@ -1,6 +1,10 @@
-##  Virtual DOM 及 Diff 算法
+# TinyReact
 
-### 1.  JSX 到底是什么
+This repository was created for me to learn react, it's a rough mockup of how react works, but it helps me understand the virtual DOM and how react works very well
+
+## Virtual DOM 及 Diff 算法
+
+### 1. JSX 到底是什么
 
 使用 React 就一定会写 JSX，JSX 到底是什么呢？它是一种 JavaScript 语法的扩展，React 使用它来描述用户界面长成什么样子。虽然它看起来非常像 HTML，但它确实是 JavaScript 。在 React 代码执行之前，Babel 会对将 JSX 编译为 React API.
 
@@ -148,7 +152,7 @@ const after = {
 }
 ```
 
-``` react
+```react
 /**
  * 创建 Virtual DOM
  * @param {string} type 类型
@@ -161,7 +165,7 @@ function createElement (type, props, ...children) {
     type,
     props,
     children
-  } 
+  }
 }
 ```
 
@@ -208,26 +212,26 @@ children: [
 
 ```javascript
 // 将原有 children 拷贝一份 不要在原有数组上进行操作
-const childElements = [].concat(...children).map(child => {
+const childElements = [].concat(...children).map((child) => {
   // 判断 child 是否是对象类型
   if (child instanceof Object) {
     // 如果是 什么都不需要做 直接返回即可
     return child
   } else {
     // 如果不是对象就是文本 手动调用 createElement 方法将文本转换为 Virtual DOM
-    return createElement("text", { textContent: child })
+    return createElement('text', { textContent: child })
   }
 })
 return {
   type,
   props,
-  children: childElements
+  children: childElements,
 }
 ```
 
 <img src="./images/3.png" width="50%"/>
 
-通过观察返回的 Virtual DOM，文本节点已经被转化成了对象类型的 Virtual DOM，但是布尔值也被当做文本节点被转化了，在 JSX 中，如果 Virtual DOM 被转化为了布尔值或者null，是不应该被更新到真实 DOM 中的，所以接下来要做的事情就是清除 Virtual DOM 中的布尔值和null。
+通过观察返回的 Virtual DOM，文本节点已经被转化成了对象类型的 Virtual DOM，但是布尔值也被当做文本节点被转化了，在 JSX 中，如果 Virtual DOM 被转化为了布尔值或者 null，是不应该被更新到真实 DOM 中的，所以接下来要做的事情就是清除 Virtual DOM 中的布尔值和 null。
 
 ```react
 // 由于 map 方法无法从数据中刨除元素, 所以此处将 map 方法更改为 reduce 方法
@@ -251,7 +255,7 @@ const childElements = [].concat(...children).reduce((result, child) => {
 return {
   type,
   props: Object.assign({ children: childElements }, props),
-  children: childElements
+  children: childElements,
 }
 ```
 
@@ -259,14 +263,14 @@ return {
 
 通过调用 render 方法可以将 Virtual DOM 对象更新为真实 DOM 对象。
 
-在更新之前需要确定是否存在旧的 Virtual DOM，如果存在需要比对差异，如果不存在可以直接将 Virtual DOM 转换为 DOM 对象。 
+在更新之前需要确定是否存在旧的 Virtual DOM，如果存在需要比对差异，如果不存在可以直接将 Virtual DOM 转换为 DOM 对象。
 
 目前先只考虑不存在旧的 Virtual DOM 的情况，就是说先直接将 Virtual DOM 对象更新为真实 DOM 对象。
 
 ```react
 // render.js
 export default function render(virtualDOM, container, oldDOM = container.firstChild) {
-  // 在 diff 方法内部判断是否需要对比 对比也好 不对比也好 都在 diff 方法中进行操作  
+  // 在 diff 方法内部判断是否需要对比 对比也好 不对比也好 都在 diff 方法中进行操作
   diff(virtualDOM, container, oldDOM)
 }
 ```
@@ -411,7 +415,7 @@ const Heart = () => <span>&hearts;</span>
 ```react
 // mountElement.js
 export default function mountElement(virtualDOM, container) {
-  // 无论是类组件还是函数组件 其实本质上都是函数 
+  // 无论是类组件还是函数组件 其实本质上都是函数
   // 如果 Virtual DOM 的 type 属性值为函数 就说明当前这个 Virtual DOM 为组件
   if (isFunction(virtualDOM)) {
     // 如果是组件 调用 mountComponent 方法进行组件渲染
@@ -455,7 +459,7 @@ export default function mountComponent(virtualDOM, container) {
 
 // Virtual DOM 是否为函数型组件
 // 条件有两个: 1. Virtual DOM 的 type 属性值为函数 2. 函数的原型对象中不能有render方法
-// 只有类组件的原型对象中有render方法 
+// 只有类组件的原型对象中有render方法
 export function isFunctionalComponent(virtualDOM) {
   const type = virtualDOM && virtualDOM.type
   return (
@@ -463,7 +467,7 @@ export function isFunctionalComponent(virtualDOM) {
   )
 }
 
-// 函数组件处理 
+// 函数组件处理
 function buildFunctionalComponent(virtualDOM) {
   // 通过 Virtual DOM 中的 type 属性获取到组件函数并调用
   // 调用组件函数时将 Virtual DOM 对象中的 props 属性传递给组件函数 这样在组件中就可以通过 props 属性获取数据了
@@ -478,7 +482,7 @@ function buildFunctionalComponent(virtualDOM) {
 
 在确定当前要渲染的组件为类组件以后，需要实例化类组件得到类组件实例对象，通过类组件实例对象调用类组件中的 render 方法，获取组件要渲染的 Virtual DOM。
 
-类组件需要继承 Component 父类，子类需要通过 super 方法将自身的 props 属性传递给 Component 父类，父类会将 props 属性挂载为父类属性，子类继承了父类，自己本身也就自然拥有props属性了。这样做的好处是当 props 发生更新后，父类可以根据更新后的 props 帮助子类更新视图。
+类组件需要继承 Component 父类，子类需要通过 super 方法将自身的 props 属性传递给 Component 父类，父类会将 props 属性挂载为父类属性，子类继承了父类，自己本身也就自然拥有 props 属性了。这样做的好处是当 props 发生更新后，父类可以根据更新后的 props 帮助子类更新视图。
 
 假设以下代码就是我们要渲染的类组件：
 
@@ -552,19 +556,19 @@ function buildStatefulComponent(virtualDOM) {
 
 在进行 Virtual DOM 比对时，需要用到更新后的 Virtual DOM 和更新前的 Virtual DOM，更新后的 Virtual DOM 目前我们可以通过 render 方法进行传递，现在的问题是更新前的 Virtual DOM 要如何获取呢？
 
-对于更新前的 Virtual DOM，对应的其实就是已经在页面中显示的真实 DOM 对象。既然是这样，那么我们在创建真实DOM对象时，就可以将 Virtual DOM 添加到真实 DOM 对象的属性中。在进行 Virtual DOM 对比之前，就可以通过真实 DOM 对象获取其对应的 Virtual DOM 对象了，其实就是通过render方法的第三个参数获取的，container.firstChild。
+对于更新前的 Virtual DOM，对应的其实就是已经在页面中显示的真实 DOM 对象。既然是这样，那么我们在创建真实 DOM 对象时，就可以将 Virtual DOM 添加到真实 DOM 对象的属性中。在进行 Virtual DOM 对比之前，就可以通过真实 DOM 对象获取其对应的 Virtual DOM 对象了，其实就是通过 render 方法的第三个参数获取的，container.firstChild。
 
 在创建真实 DOM 对象时为其添加对应的 Virtual DOM 对象
 
- ```react
+```react
 // mountElement.js
 import mountElement from "./mountElement"
 
 export default function mountNativeElement(virtualDOM, container) {
-  // 将 Virtual DOM 挂载到真实 DOM 对象的属性中 方便在对比时获取其 Virtual DOM
-  newElement._virtualDOM = virtualDOM
+ // 将 Virtual DOM 挂载到真实 DOM 对象的属性中 方便在对比时获取其 Virtual DOM
+ newElement._virtualDOM = virtualDOM
 }
- ```
+```
 
 <img src="./images/8.png" width="80%" style="margin-bottom: 30px"/>
 
@@ -696,7 +700,7 @@ else if (
   const newDOMElement = createDOMElement(virtualDOM)
   // 用创建出来的真实 DOM 元素 替换旧的 DOM 元素
   oldDOM.parentNode.replaceChild(newDOMElement, oldDOM)
-} 
+}
 ```
 
 #### 9.3 删除节点
@@ -787,7 +791,7 @@ setState(state) {
 }
 ```
 
-要实现对比，还需要获取未更新前的 Virtual DOM，按照之前的经验，我们可以从 DOM 对象中获取其对应的 Virtual  DOM 对象，未更新前的 DOM 对象实际上就是现在在页面中显示的 DOM 对象，我们只要能获取到这个 DOM 对象就可以获取到其对应的 Virtual DOM 对象了。
+要实现对比，还需要获取未更新前的 Virtual DOM，按照之前的经验，我们可以从 DOM 对象中获取其对应的 Virtual DOM 对象，未更新前的 DOM 对象实际上就是现在在页面中显示的 DOM 对象，我们只要能获取到这个 DOM 对象就可以获取到其对应的 Virtual DOM 对象了。
 
 页面中的 DOM 对象要怎样获取呢？页面中的 DOM 对象是通过 mountNativeElement 方法挂载到页面中的，所以我们只需要在这个方法中调用 Component 类中的方法就可以将 DOM 对象保存在 Component 类中了。在子类调用 setState 方法的时候，在 setState 方法中再调用另一个获取 DOM 对象的方法就可以获取到之前保存的 DOM 对象了。
 
@@ -803,9 +807,9 @@ getDOM() {
 }
 ```
 
-接下来我们要研究一下在 mountNativeElement 方法中如何才能调用到 setDOM 方法，要调用 setDOM 方法，必须要得到类的实例对象，所以目前的问题就是如何在 mountNativeElement 方法中得到类的实例对象，这个类指的不是Component类，因为我们在代码中并不是直接实例化的Component类，而是实例化的它的子类，由于子类继承了父类，所以在子类的实例对象中也是可以调用到 setDOM 方法的。
+接下来我们要研究一下在 mountNativeElement 方法中如何才能调用到 setDOM 方法，要调用 setDOM 方法，必须要得到类的实例对象，所以目前的问题就是如何在 mountNativeElement 方法中得到类的实例对象，这个类指的不是 Component 类，因为我们在代码中并不是直接实例化的 Component 类，而是实例化的它的子类，由于子类继承了父类，所以在子类的实例对象中也是可以调用到 setDOM 方法的。
 
-mountNativeElement 方法接收最新的 Virtual DOM 对象，如果这个 Virtual DOM 对象是类组件产生的，在产生这个 Virtual DOM 对象时一定会先得到这个类的实例对象，然后再调用实例对象下面的 render 方法进行获取。我们可以在那个时候将类组件实例对象添加到 Virtual DOM 对象的属性中，而这个 Virtual DOM 对象最终会传递给 mountNativeElement  方法，这样我们就可以在 mountNativeElement 方法中获取到组件的实例对象了，既然类组件的实例对象获取到了，我们就可以调用 setDOM 方法了。
+mountNativeElement 方法接收最新的 Virtual DOM 对象，如果这个 Virtual DOM 对象是类组件产生的，在产生这个 Virtual DOM 对象时一定会先得到这个类的实例对象，然后再调用实例对象下面的 render 方法进行获取。我们可以在那个时候将类组件实例对象添加到 Virtual DOM 对象的属性中，而这个 Virtual DOM 对象最终会传递给 mountNativeElement 方法，这样我们就可以在 mountNativeElement 方法中获取到组件的实例对象了，既然类组件的实例对象获取到了，我们就可以调用 setDOM 方法了。
 
 在 buildClassComponent 方法中为 Virtual DOM 对象添加 component 属性， 值为类组件的实例对象。
 
@@ -874,7 +878,7 @@ setState(state) {
 
 如果是组件再判断要更新的组件和未更新前的组件是否是同一个组件，如果不是同一个组件就不需要做组件更新操作，直接调用 mountElement 方法将组件返回的 Virtual DOM 添加到页面中。
 
-如果是同一个组件，就执行更新组件操作，其实就是将最新的 props 传递到组件中，再调用组件的render方法获取组件返回的最新的 Virtual DOM 对象，再将 Virtual DOM 对象传递给 diff 方法，让 diff 方法找出差异，从而将差异更新到真实 DOM 对象中。
+如果是同一个组件，就执行更新组件操作，其实就是将最新的 props 传递到组件中，再调用组件的 render 方法获取组件返回的最新的 Virtual DOM 对象，再将 Virtual DOM 对象传递给 diff 方法，让 diff 方法找出差异，从而将差异更新到真实 DOM 对象中。
 
 在更新组件的过程中还要在不同阶段调用其不同的组件生命周期函数。
 
@@ -898,7 +902,7 @@ else if (typeof virtualDOM.type === "function") {
 export default function diffComponent(virtualDOM, oldComponent, oldDOM, container) {
   // 判断要更新的组件和未更新的组件是否是同一个组件 只需要确定两者使用的是否是同一个构造函数就可以了
   if (isSameComponent(virtualDOM, oldComponent)) {
-    // 属同一个组件 做组件更新  
+    // 属同一个组件 做组件更新
   } else {
     // 不是同一个组件 直接将组件内容显示在页面中
   }
@@ -917,7 +921,7 @@ function isSameComponent(virtualDOM, oldComponent) {
 // diffComponent.js
 else {
   // 不是同一个组件 直接将组件内容显示在页面中
-  // 这里为 mountElement 方法新增了一个参数 oldDOM 
+  // 这里为 mountElement 方法新增了一个参数 oldDOM
   // 作用是在将 DOM 对象插入到页面前 将页面中已存在的 DOM 对象删除 否则无论是旧DOM对象还是新DOM对象都会显示在页面中
   mountElement(virtualDOM, container, oldDOM)
 }
@@ -928,7 +932,7 @@ else {
 ```javascript
 // mountNavtiveElement.js
 export default function mountNativeElement(virtualDOM, container, oldDOM) {
- // 如果旧的DOM对象存在 删除
+  // 如果旧的DOM对象存在 删除
   if (oldDOM) {
     unmount(oldDOM)
   }
@@ -1037,7 +1041,7 @@ class DemoRef extends TinyReact.Component {
 }
 ```
 
-实现思路是在创建节点时判断其 Virtual DOM 对象中是否有 ref 属性，如果有就调用 ref 属性中所存储的方法并且将创建出来的DOM对象作为参数传递给 ref 方法，这样在渲染组件节点的时候就可以拿到元素对象并将元素对象存储为组件属性了。
+实现思路是在创建节点时判断其 Virtual DOM 对象中是否有 ref 属性，如果有就调用 ref 属性中所存储的方法并且将创建出来的 DOM 对象作为参数传递给 ref 方法，这样在渲染组件节点的时候就可以拿到元素对象并将元素对象存储为组件属性了。
 
 ```react
 // createDOMElement.js
@@ -1112,7 +1116,7 @@ key 属性不需要全局唯一，但是在同一个父节点下的兄弟节点�
 
 #### 11.1 节点对比
 
-实现思路是在两个元素进行比对时，如果类型相同，就循环旧的 DOM 对象的子元素，查看其身上是否有key 属性，如果有就将这个子元素的 DOM 对象存储在一个 JavaScript 对象中，接着循环要渲染的 Virtual DOM 对象的子元素，在循环过程中获取到这个子元素的 key 属性，然后使用这个 key 属性到 JavaScript 对象中查找 DOM 对象，如果能够找到就说明这个元素是已经存在的，是不需要重新渲染的。如果通过key属性找不到这个元素，就说明这个元素是新增的是需要渲染的。
+实现思路是在两个元素进行比对时，如果类型相同，就循环旧的 DOM 对象的子元素，查看其身上是否有 key 属性，如果有就将这个子元素的 DOM 对象存储在一个 JavaScript 对象中，接着循环要渲染的 Virtual DOM 对象的子元素，在循环过程中获取到这个子元素的 key 属性，然后使用这个 key 属性到 JavaScript 对象中查找 DOM 对象，如果能够找到就说明这个元素是已经存在的，是不需要重新渲染的。如果通过 key 属性找不到这个元素，就说明这个元素是新增的是需要渲染的。
 
 ```react
 // diff.js
@@ -1245,7 +1249,7 @@ export default function unmount(dom) {
     // 调用组件卸载生命周期函数
     component.componentWillUnmount()
   }
-  
+
   // 如果节点具有 ref 属性 通过再次调用 ref 方法 将传递给组件的DOM对象删除
   if (virtualDOM.props && virtualDOM.props.ref) {
     virtualDOM.props.ref(null)
@@ -1259,7 +1263,7 @@ export default function unmount(dom) {
       dom.removeEventListener(eventName, eventHandler)
     }
   })
-	
+
   // 递归删除子节点
   if (dom.childNodes.length > 0) {
     for (let i = 0; i < dom.childNodes.length; i++) {
@@ -1267,21 +1271,8 @@ export default function unmount(dom) {
       i--
     }
   }
-  	
+
   dom.remove()
 }
 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
